@@ -19,6 +19,7 @@ public:
     ~ExpDecayValue();
     
     const T& operator[](int index) const;
+    bool isNull() const;
     
 private:
     struct ExpDecayObj : public Util::RefCntObj {
@@ -90,6 +91,9 @@ public:
     
     ExpDecayMap();
     ExpDecayValue<float,N> operator[](unsigned int tau);
+
+private:
+    bool elemIsNull(const typename map_type::const_iterator& it) const;
     
 private:
     map_type data_;
