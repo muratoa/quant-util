@@ -24,6 +24,13 @@ Util::ExpDecayValue<T,N>::operator[](int index) const
 }
 
 template <typename T, size_t N>
+bool
+Util::ExpDecayValue<T,N>::isNull() const
+{
+    return pValue_->refCount() == 0;
+}
+
+template <typename T, size_t N>
 Util::ExpDecayValue<T,N>::ExpDecayObj::ExpDecayObj(const T* vals)
     : data_(NULL)
 {
@@ -60,10 +67,15 @@ template <size_t N>
 Util::ExpDecayValue<float,N>
 Util::ExpDecayMap<N>::operator[](const unsigned int tau)
 {
-    typename map_type::const_iterator it = data_.find(tau);
-    
-    if (it != data_.end())
-        return it->second;
+    typename map_type::iterator it = data_.find(tau);
+
+    if (it != data_.end()) {
+        
+        if (!elemIsNull(it))
+            return it->second;
+        else
+            data_.erase(it);
+    }
     
     float vals[N];
     float ftau = static_cast<float>(tau);
@@ -76,6 +88,13 @@ Util::ExpDecayMap<N>::operator[](const unsigned int tau)
     data_.insert(std::make_pair(tau,edv));
     
     return edv;
+}
+
+template <size_t N>
+bool
+Util::ExpDecayMap<N>::elemIsNull(const typename map_type::const_iterator& it) const
+{
+    return it->second.isNull();
 }
 
 template <class TimeT, class ConvT, size_t N>
