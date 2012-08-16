@@ -38,9 +38,11 @@ public:
     operator const value_type*() const {return begin();}
     
     inline T& operator()(size_t i);
-    inline T& operator ()(size_t i, size_t j);
+    inline T& operator()(size_t i, size_t j);
     inline const T& operator()(size_t i) const;
     inline const T& operator()(size_t i, size_t j) const;
+
+    void dimSwap(); // call after tranpose.
     
     friend std::ostream& operator<<(std::ostream& os,
                                     const TwoDVector<T>& x) {
@@ -52,7 +54,7 @@ private:
     size_t getIndex(size_t i, size_t j) const;
     void resizeImpl(size_t D1, size_t D2, const TwoDVector<T>& x);
     void copyFrom(const TwoDVector<T>& x);
-    void print(std::ostream& ofs) const;
+    void print(std::ostream& os) const;
     
 private:
     size_t nrow_;
