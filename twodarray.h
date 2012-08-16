@@ -39,6 +39,8 @@ public:
     inline T& operator ()(size_t i, size_t j);
     inline const T& operator()(size_t i) const;
     inline const T& operator()(size_t i, size_t j) const;
+
+    void dimSwap(); // call after tranpose.
     
     friend std::ostream& operator<<(std::ostream& os,
                                     const TwoDArray<T,D1,D2>& x) {
@@ -49,7 +51,7 @@ public:
 private:
     size_t getIndex(size_t i, size_t j) const;
     void copyFrom(const TwoDArray<T,D1,D2>& x);
-    void print(std::ostream& ofs) const;
+    void print(std::ostream& os) const;
     
 private:
     typedef std::array<std::array<T,D2>,D1> data_type;
@@ -59,10 +61,6 @@ private:
     data_type* pData_;
 };
 
-// template <typename T, size_t D1, size_t D2>
-// friend std::ostream& operator<<(std::ostream& stream,
-//                                 const TwoDArray<T,D1,D2>& x);
-    
 } // namespace
 
 #include "twodarray.ch"
