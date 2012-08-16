@@ -6,6 +6,7 @@
 #include <limits>
 
 /** APP INCLUDES ***************************************************************/
+#include "util/statutil.h"
 
 namespace Util {
 
@@ -29,13 +30,6 @@ namespace Detail {
                           t * std::exp(-x*x));
 
         return sg * z;
-    }
-    
-    template <typename T>
-    int8_t
-    sgn(const T val)
-    {
-        return (T(0) < val) - (val < T(0));
     }
 
     template <typename T>
@@ -104,7 +98,7 @@ Util::EfficientMovingMedian<T>::newData(const T value,
                                         const float maxVal)
 {
     scale_ += tau_ * (std::abs(value) - scale_);
-    value_ += tau_ * scale_ * signedZScore(value);
+    value_ += tau_ * scale_ * signedCDF(value);
     Detail::boundVal(value_,minVal,maxVal);
     
     ++numObs_;
@@ -112,16 +106,16 @@ Util::EfficientMovingMedian<T>::newData(const T value,
 
 template <typename T>
 float
-Util::EfficientMovingMedian<T>::signedZScore(const T value)
+Util::EfficientMovingMedian<T>::signedCDF(const T value)
 {
     const int8_t sg = Detail::sgn(value - value_);
     const float corrctn = sqrt(1.f - std::pow(1 - tau_,2*numObs_));
     
     signEma_ += tau_ * (sg - signEma_);
     
-    const float z = std::abs(signEma_) / (stddev_ * corrctn);
+    const float zscore = std::abs(signEma_) / (stddev_ * corrctn);
     
-    return sg * Detail::erf(z / sqrt(2));
+    return sg * Detail::erf(zscore / sqrt(2));
 }
 
 template <typename T>
@@ -146,7 +140,7 @@ Util::MovingQuantileTree<T>::MovingQuantileTree(const int depth,
                                                 const float lowerBound,
                                                 const float upperBound,
                                                 const float tau)
-    : depth_(depth)
+    : depth_(depth - 1)
     , tau_(tau)
     , head_(NULL)
     , quantiles_()
@@ -256,35 +250,35 @@ Util::MovingQuantileTree<T>::destroy(node* pleaf)
 
 template <typename T>
 void
-Util::MovingQuantileTree<T>::getValues() const
+Util::MovingQuantileTree<T>::calcValues() const
 {
     quantiles_.clear();
     quantiles_.reserve(1 << (depth_ + 1) - 1);
 
-    getValuesImpl(head_);
+    calcValuesImpl(head_);
 }
 
 template <typename T>
 void
-Util::MovingQuantileTree<T>::getValuesImpl(node* pcurr) const
+Util::MovingQuantileTree<T>::calcValuesImpl(node* pcurr) const
 {
     if (!pcurr)
         return;
     
     if (pcurr->left())
-        getValuesImpl(pcurr->left());
+        calcValuesImpl(pcurr->left());
     
     quantiles_.push_back(pcurr->value());
     
     if (pcurr->right())
-        getValuesImpl(pcurr->right());   
+        calcValuesImpl(pcurr->right());   
 }
 
 template <typename T>
 const std::vector<float>&
 Util::MovingQuantileTree<T>::quantiles() const
 {
-    getValues();
+    calcValues();
     
     return quantiles_;
 }
