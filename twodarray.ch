@@ -1,4 +1,5 @@
-#include "twodarray.h"
+#ifndef TWO_D_ARRAY_CH_INCLUDED
+#define TWO_D_ARRAY_CH_INCLUDED
 
 /** CPP INCLUDES ***************************************************************/
 #include <algorithm>
@@ -110,6 +111,15 @@ Util::TwoDArray<T,D1,D2>::getIndex(const size_t i, const size_t j) const
 
 template <typename T, size_t D1, size_t D2>
 void
+Util::TwoDArray<T,D1,D2>::dimSwap()
+{
+    const size_t tmp = nrow();
+    nrow_ = ncol();
+    ncol_ = tmp;
+}
+
+template <typename T, size_t D1, size_t D2>
+void
 Util::TwoDArray<T,D1,D2>::print(std::ostream& os) const
 {
     const TwoDArray<T,D1,D2>& x = *this;
@@ -121,3 +131,5 @@ Util::TwoDArray<T,D1,D2>::print(std::ostream& os) const
         os << std::endl;
     }
 }
+
+#endif // TWO_D_ARRAY_CH included
