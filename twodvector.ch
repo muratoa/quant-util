@@ -1,4 +1,5 @@
-#include "twodvector.h"
+#ifndef TWO_D_VECTOR_CH_INCLUDED
+#define TWO_D_VECTOR_CH_INCLUDED
 
 /** CPP INCLUDES ***************************************************************/
 #include <algorithm>
@@ -148,6 +149,15 @@ Util::TwoDVector<T>::getIndex(const size_t i, const size_t j) const
 
 template <typename T>
 void
+Util::TwoDVector<T>::dimSwap()
+{
+    const size_t tmp = nrow();
+    nrow_ = ncol();
+    ncol_ = tmp;
+}
+
+template <typename T>
+void
 Util::TwoDVector<T>::print(std::ostream& os) const
 {
     const TwoDVector<T>& x = *this;
@@ -159,3 +169,5 @@ Util::TwoDVector<T>::print(std::ostream& os) const
         os << std::endl;
     }
 }
+
+#endif // TWO_D_VECTOR_CH included
