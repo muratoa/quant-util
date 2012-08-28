@@ -14,6 +14,16 @@ Util::TwoDVector<T>::TwoDVector(const size_t D1, const size_t D2)
 }
 
 template <typename T>
+Util::TwoDVector<T>::TwoDVector(const_iterator first,
+                                const size_t D1, const size_t D2)
+    : nrow_(0)
+    , ncol_(0)
+    , pData_(NULL)
+{
+    resize(first,D1,D2);
+}
+
+template <typename T>
 Util::TwoDVector<T>::TwoDVector()
     : nrow_(0)
     , ncol_(0)
@@ -40,6 +50,14 @@ Util::TwoDVector<T>::resize(const size_t D1, const size_t D2)
 
 template <typename T>
 void
+Util::TwoDVector<T>::resize(const_iterator first,
+                            const size_t D1, const size_t D2)
+{
+    resizeImpl(D1,D2,first);
+}
+
+template <typename T>
+void
 Util::TwoDVector<T>::resizeImpl(const size_t D1, const size_t D2,
                                 const Util::TwoDVector<T>& x)
 {
@@ -48,6 +66,26 @@ Util::TwoDVector<T>::resizeImpl(const size_t D1, const size_t D2,
     
     T* tmp = new T[newSize];
     std::copy(x.begin(),x.begin() + sizeToCopy,tmp);
+    
+    if (pData_) {
+        delete[] pData_;
+        pData_ = NULL;
+    }
+    
+    pData_ = tmp;
+    nrow_ = D1;
+    ncol_ = D2;
+}
+
+template <typename T>
+void
+Util::TwoDVector<T>::resizeImpl(const size_t D1, const size_t D2,
+                                Util::TwoDVector<T>::const_iterator first)
+{
+    const size_t newSize = D1 * D2;
+    
+    T* tmp = new T[newSize];
+    std::copy(first,first + newSize,tmp);
     
     if (pData_) {
         delete[] pData_;
