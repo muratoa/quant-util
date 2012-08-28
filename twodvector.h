@@ -17,6 +17,7 @@ public:
     typedef const value_type* const_iterator;
     
     TwoDVector(size_t D1, size_t D2);
+    TwoDVector(const_iterator first, size_t D1, size_t D2);
     TwoDVector();
     ~TwoDVector();
     
@@ -24,6 +25,9 @@ public:
     TwoDVector& operator=(const TwoDVector<T>& x); 
 
     void resize(size_t D1, size_t D2);
+    void resize(const_iterator first, size_t D1, size_t D2);
+
+    bool empty() const {return size() == 0;}
     
     size_t nrow() const {return nrow_;}
     size_t ncol() const {return ncol_;}
@@ -53,6 +57,7 @@ public:
 private:
     size_t getIndex(size_t i, size_t j) const;
     void resizeImpl(size_t D1, size_t D2, const TwoDVector<T>& x);
+    void resizeImpl(size_t D1, size_t D2, const_iterator first);
     void copyFrom(const TwoDVector<T>& x);
     void print(std::ostream& os) const;
     
