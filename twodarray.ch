@@ -30,7 +30,9 @@ Util::TwoDArray<T,D1,D2>::copyFrom(const Util::TwoDArray<T,D1,D2>& x)
 
 template <typename T, size_t D1, size_t D2>
 Util::TwoDArray<T,D1,D2>::TwoDArray(const Util::TwoDArray<T,D1,D2>& x)
-    : pData_(new Util::TwoDArray<T,D1,D2>::data_type())
+    : nrow_(D1)
+    , ncol_(D2)
+    , pData_(new Util::TwoDArray<T,D1,D2>::data_type())
 {
     copyFrom(x);
 }
