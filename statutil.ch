@@ -218,12 +218,11 @@ template <typename T, typename ForwardIterator>
 T
 Util::sumOfSquares(ForwardIterator first, ForwardIterator last)
 {
-    T m;
-    T m2;
-    VarCalcImpl<T,ForwardIterator> variance;
-    variance.calc(first,last,m,m2);
-
-    return m2;
+    T ss = T(0);
+    for (; first!=last; ++first)
+        ss += (*first) * (*first);
+    
+    return ss;
 }
 
 template <typename T, typename ForwardIterator>
@@ -440,13 +439,13 @@ Util::standardizeCols(T* a, const int m, const int n,
     transpose(b,n,m,a);
 }
 
-template <typename T, typename T2>
+template <typename T, typename RetT>
 void
 Util::standardizeRows(T* a, const int m, const int n,
-                      const std::vector<T2>& means,
-                      const std::vector<T2>& stddevs)
+                      const std::vector<RetT>& means,
+                      const std::vector<RetT>& stddevs)
 {
-    Detail::assert<Detail::valid_numeric_type<T2>::value> invalid_type;
+    Detail::assert<Detail::valid_numeric_type<RetT>::value> invalid_type;
     UNUSED(invalid_type);
 
     for (int i = 0; i < m; i++) {
@@ -457,13 +456,13 @@ Util::standardizeRows(T* a, const int m, const int n,
     }
 }
 
-template <typename T, typename T2>
+template <typename T, typename RetT>
 void
 Util::standardizeCols(T* a, const int m, const int n,
-                      const std::vector<T2>& means,
-                      const std::vector<T2>& stddevs)
+                      const std::vector<RetT>& means,
+                      const std::vector<RetT>& stddevs)
 {
-    Detail::assert<Detail::valid_numeric_type<T2>::value> invalid_type;
+    Detail::assert<Detail::valid_numeric_type<RetT>::value> invalid_type;
     UNUSED(invalid_type);
 
     T b[m*n];
