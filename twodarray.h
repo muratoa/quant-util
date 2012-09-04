@@ -23,9 +23,9 @@ public:
     TwoDArray(const TwoDArray<T,D1,D2>& x);
     TwoDArray& operator=(const TwoDArray<T,D1,D2>& x); 
 
-    size_t nrow() const {return nrow_;}
-    size_t ncol() const {return ncol_;}
-    size_t size() const {return nrow() * ncol();}
+    size_t rowSize() const {return rowSize_;}
+    size_t colSize() const {return colSize_;}
+    size_t size() const {return rowSize() * colSize();}
     
     iterator begin();
     iterator end();
@@ -56,8 +56,8 @@ private:
 private:
     typedef std::array<std::array<T,D2>,D1> data_type;
     
-    size_t nrow_;
-    size_t ncol_;
+    size_t rowSize_;
+    size_t colSize_;
     data_type* pData_;
 };
 
