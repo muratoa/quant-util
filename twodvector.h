@@ -29,15 +29,15 @@ public:
 
     bool empty() const {return size() == 0;}
     
-    size_t nrow() const {return nrow_;}
-    size_t ncol() const {return ncol_;}
-    size_t size() const {return nrow() * ncol();}
+    size_t rowSize() const {return rowSize_;}
+    size_t colSize() const {return colSize_;}
+    size_t size() const {return rowSize() * colSize();}
     
     iterator begin();
     iterator end();
     const_iterator begin() const;
     const_iterator end() const;
-
+    
     operator value_type*() {return begin();}
     operator const value_type*() const {return begin();}
     
@@ -62,8 +62,8 @@ private:
     void print(std::ostream& os) const;
     
 private:
-    size_t nrow_;
-    size_t ncol_;
+    size_t rowSize_;
+    size_t colSize_;
     value_type* pData_;
 };
     
