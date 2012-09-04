@@ -32,8 +32,8 @@ Util::MultRegress<MatrixT>::MultRegress(const std::vector<double>& y,
                                         MatrixT& X,
                                         const bool calcInferenceStats,
                                         const bool calcInputStats)
-    : ip_(X.ncol())
-    , ldx_(X.nrow())
+    : ip_(X.colSize())
+    , ldx_(X.rowSize())
     , varNames_()
     , mu_()
     , sd_()
@@ -54,8 +54,8 @@ Util::MultRegress<MatrixT>::MultRegress(const std::vector<double>& y,
                                         const MatrixT& X,
                                         const bool calcInferenceStats,
                                         const bool calcInputStats)
-    : ip_(X.ncol())
-    , ldx_(X.nrow())
+    : ip_(X.colSize())
+    , ldx_(X.rowSize())
     , varNames_()
     , mu_()
     , sd_()
@@ -77,8 +77,8 @@ Util::MultRegress<MatrixT>::MultRegress(const std::vector<double>& y,
                                         const std::vector<std::string>& varNames,
                                         const bool calcInferenceStats,
                                         const bool calcInputStats)
-    : ip_(X.ncol())
-    , ldx_(X.nrow())
+    : ip_(X.colSize())
+    , ldx_(X.rowSize())
     , varNames_(varNames)
     , mu_()
     , sd_()
@@ -100,8 +100,8 @@ Util::MultRegress<MatrixT>::MultRegress(const std::vector<double>& y,
                                         const std::vector<std::string>& varNames,
                                         const bool calcInferenceStats,
                                         const bool calcInputStats)
-    : ip_(X.ncol())
-    , ldx_(X.nrow())
+    : ip_(X.colSize())
+    , ldx_(X.rowSize())
     , varNames_(varNames)
     , mu_()
     , sd_()
@@ -161,8 +161,8 @@ void
 Util::MultRegress<MatrixT>::coeffCalcImpl(const std::vector<double>& y,
                                           MatrixT& X)
 {
-    const size_t m = X.nrow();
-    const size_t n = X.ncol();
+    const size_t m = X.rowSize();
+    const size_t n = X.colSize();
 
     gsl_matrix_view a = gsl_matrix_view_array(X,m,n);
     gsl_vector_view x = gsl_vector_view_array(&bp_[0],bp_.size());
@@ -185,8 +185,8 @@ void
 Util::MultRegress<MatrixT>::coeffCalcInferenceImpl(const std::vector<double>& y,
                                                    const MatrixT& X)
 {
-    const size_t m = X.nrow();
-    const size_t n = X.ncol();
+    const size_t m = X.rowSize();
+    const size_t n = X.colSize();
 
     cov_.resize(n,n);
     
@@ -217,7 +217,7 @@ Util::MultRegress<MatrixT>::inferenceCalc(const std::vector<double>& y,
     gsl_vector_view r = gsl_vector_view_array(&resid_[0],resid_.size());
     gsl_vector_const_view x = gsl_vector_const_view_array(&bp_[0],bp_.size());
     gsl_vector_const_view b = gsl_vector_const_view_array(&y[0],y.size());
-    gsl_matrix_const_view a = gsl_matrix_const_view_array(X,X.nrow(),X.ncol());
+    gsl_matrix_const_view a = gsl_matrix_const_view_array(X,X.rowSize(),X.colSize());
 
     {
         gsl_multifit_linear_residuals(&a.matrix,&b.vector,&x.vector,&r.vector);
@@ -232,11 +232,9 @@ Util::MultRegress<MatrixT>::inferenceCalc(const std::vector<double>& y,
 template <class MatrixT>
 void
 Util::MultRegress<MatrixT>::inpStatsCalc(const MatrixT& X)
-{
-    const double* pX = X;
-    
-    Util::rowMeans(pX,X.nrow(),X.ncol(),mu_);
-    Util::rowStdDevs(pX,X.nrow(),X.ncol(),sd_);
+{   
+    Util::colMeans(X.begin(),X.end(),X.colSize(),mu_);
+    Util::colStdDevs(X.begin(),X.end(),X.colSize(),sd_);
 }
 
 template <class MatrixT>
@@ -265,6 +263,7 @@ double
 Util::MultRegress<MatrixT>::predict(const double* first) const
 {
     double yhat = 0.;
+    
     return std::inner_product(bp_.begin(),bp_.end(),first,yhat);
 }
 
@@ -276,7 +275,7 @@ Util::MultRegress<MatrixT>::rmseCalc(const std::vector<double>& y,
                                      double& predRmse) const
 {
     const size_t sz = y.size();
-    if ((X.nrow() != sz) || (X.ncol() != ip_))
+    if ((X.rowSize() != sz) || (X.colSize() != ip_))
         return;
 
     double ssq = 0.;
@@ -330,8 +329,7 @@ Util::MultRegress<MatrixT>::print(std::ostream& os) const
 
     if ((bp_.size() == ip_) && (se_.size() == ip_))
         printModelImpl(os);
-
-    //int ifail = 1;
+    
     const double fstat = (ldx_ - ip_) * (tss_ / rss_ - 1) / (ip_ - 1);
     const double fpval = 1 - gsl_cdf_fdist_P(fstat,ip_ - 1,ldx_ - ip_);
 
