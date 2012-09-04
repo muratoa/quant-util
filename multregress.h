@@ -95,7 +95,7 @@ private:
     std::vector<double> se_;
     std::vector<double> resid_;
     MatrixT cov_;
-};
+};   
     
 } // namespace
 
