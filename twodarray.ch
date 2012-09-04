@@ -3,11 +3,12 @@
 
 /** CPP INCLUDES ***************************************************************/
 #include <algorithm>
+#include <iterator>
 
 template <typename T, size_t D1, size_t D2>
 Util::TwoDArray<T,D1,D2>::TwoDArray()
-    : nrow_(D1)
-    , ncol_(D2)
+    : rowSize_(D1)
+    , colSize_(D2)
     , pData_(new Util::TwoDArray<T,D1,D2>::data_type())
 {
 }
@@ -30,8 +31,8 @@ Util::TwoDArray<T,D1,D2>::copyFrom(const Util::TwoDArray<T,D1,D2>& x)
 
 template <typename T, size_t D1, size_t D2>
 Util::TwoDArray<T,D1,D2>::TwoDArray(const Util::TwoDArray<T,D1,D2>& x)
-    : nrow_(D1)
-    , ncol_(D2)
+    : rowSize_(D1)
+    , colSize_(D2)
     , pData_(new Util::TwoDArray<T,D1,D2>::data_type())
 {
     copyFrom(x);
@@ -108,16 +109,16 @@ template <typename T, size_t D1, size_t D2>
 size_t
 Util::TwoDArray<T,D1,D2>::getIndex(const size_t i, const size_t j) const
 {
-    return ncol()*i + j;
+    return colSize()*i + j;
 }
 
 template <typename T, size_t D1, size_t D2>
 void
 Util::TwoDArray<T,D1,D2>::dimSwap()
 {
-    const size_t tmp = nrow();
-    nrow_ = ncol();
-    ncol_ = tmp;
+    const size_t tmp = rowSize();
+    rowSize_ = colSize();
+    colSize_ = tmp;
 }
 
 template <typename T, size_t D1, size_t D2>
@@ -125,11 +126,12 @@ void
 Util::TwoDArray<T,D1,D2>::print(std::ostream& os) const
 {
     const TwoDArray<T,D1,D2>& x = *this;
-    
-    for (size_t i = 0;  i < nrow(); ++i) {
-        for (size_t j = 0; j < ncol(); ++j) {
-            os << x(i,j) << ' ';
-        }
+    std::ostream_iterator<T> oit(os," ");
+
+    for (size_t i = 0; i < x.rowSize(); ++i) {
+        
+        std::copy(x.begin() + i*x.colSize(),
+                  x.begin() + (i+1)*x.colSize(), oit);
         os << std::endl;
     }
 }
