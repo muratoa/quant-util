@@ -108,24 +108,25 @@ Util::transpose(const T* __restrict__ a, const int m, const int n,
 template <typename RandomAccessIterator>
 void
 Util::transpose(RandomAccessIterator first,
-                RandomAccessIterator last, const int m)
+                RandomAccessIterator last,
+                const size_t colSize)
 {
-    const int sz = (last - first - 1);
-    const int n = (last - first) / m;
+    const size_t sz = (last - first - 1);
+    const size_t rowSize = (last - first) / colSize;
     
     std::vector<bool> visited(last - first);
-
+    
     RandomAccessIterator cycle = first;
     while (++cycle != last) {
-
+        
         if (visited[cycle - first])
             continue;
-
+        
         int idx = cycle - first;
-
-        do { 
-            idx = (idx == sz) ? sz : (n*idx) % sz;
-            std::swap(*(first + idx), *cycle);
+        
+        do {
+            idx = (idx == sz) ? sz : (rowSize*idx) % sz;
+            std::swap(*(first + idx),*cycle);
             visited[idx] = true;
             
         } while ((first + idx) != cycle);
@@ -245,131 +246,167 @@ Util::meanAbsDiff(ForwardIterator first, ForwardIterator last)
         }
         ++first;
     }
-
+    
     return 2 * mad / (n*(n-1));
 }
 
-template <typename RetT, typename T, class F>
-std::vector<RetT>
-Util::rowApply(const T* a, int m, int n, F f)
+template <typename T, typename ForwardIterator, class F>
+std::vector<T>
+Util::rowApply(ForwardIterator first,
+               ForwardIterator last,
+               const size_t rowSize, F f)
 {
-    std::vector<RetT> res(m);
-    for (int i = 0; i < m; i++) {
-        res[i] = f(a[i*n], a[(i+1)*n - 1]);
+    const size_t colSize = (last - first) / rowSize;   
+    std::vector<T> res(rowSize);
+    
+    for (int i = 0; i < rowSize; i++) {
+        res[i] = f(first + i*colSize,
+                   first + (i+1)*colSize);
     }
-
+    
     return res;
 }
 
-template <typename RetT, typename T, class F>
+template <typename T, typename ForwardIterator, class F>
 void
-Util::rowApply(const T* a, int m, int n, F f, std::vector<RetT>& res)
+Util::rowApply(ForwardIterator first,
+               ForwardIterator last,
+               const size_t rowSize, F f,
+               std::vector<T>& res)
 {
-    res.resize(m);
-    for (int i = 0; i < m; i++) {
-        res[i] = f(a + i*n, a + (i+1)*n);
+    const size_t colSize = (last - first) / rowSize;   
+    res.resize(rowSize);
+    
+    for (int i = 0; i < rowSize; i++) {
+        res[i] = f(first + i*colSize,
+                   first + (i+1)*colSize);
     }
 }
 
-template <typename RetT, typename T, class F>
-std::vector<RetT>
-Util::colApply(const T* a, const int m, const int n, F f)
+template <typename T, typename ForwardIterator, class F>
+std::vector<T>
+Util::colApply(ForwardIterator first,
+               ForwardIterator last,
+               const size_t colSize, F f)
 {
-    T b[m*n];
-    transpose(a,m,n,b);
+    std::vector<T> res;
+    Util::colApply(first,last,colSize,f,res);
     
-    std::vector<RetT> res(n);
-    for (int i = 0; i < n; i++) {
-        res[i] = f(b + i*m, b + (i+1)*m);
-    }
-
     return res;
 }
 
-template <typename RetT, typename T, class F>
+template <typename T, typename ForwardIterator, class F>
 void
-Util::colApply(const T* a, const int m, const int n, F f, std::vector<RetT>& res)
+Util::colApply(ForwardIterator first,
+               ForwardIterator last,
+               const size_t colSize, F f,
+               std::vector<T>& res)
 {
-    T b[m*n];
-    transpose(a,m,n,b);
+    typedef typename std::iterator_traits<ForwardIterator>::value_type Tp;
+    const size_t rowSize = (last - first) / colSize;
     
-    res.resize(n);
-    for (int i = 0; i < n; i++) {
-        res[i] = f(b + i*m, b + (i+1)*m);
-    }
-}
-
-template <typename RetT, typename T>
-std::vector<RetT>
-Util::rowMeans(const T* a, const int m, const int n)
-{
-    MeanCalc<RetT,const T*> mean;
+    Util::transpose(const_cast<Tp*>(first),
+                    const_cast<Tp*>(last),colSize);
     
-    return rowApply(a,m,n,mean);
-}
-
-template <typename RetT, typename T>
-void
-Util::rowMeans(const T* a, const int m, const int n, std::vector<RetT>& res)
-{
-    MeanCalc<RetT,const T*> mean;
-    rowApply(a,m,n,mean,res);
-}
-
-template <typename RetT, typename T>
-std::vector<RetT>
-Util::colMeans(const T* a, const int m, const int n)
-{
-    MeanCalc<RetT,const T*> mean;
-
-    return colApply(a,m,n,mean);
-}
-
-template <typename RetT, typename T>
-void
-Util::colMeans(const T* a, const int m, const int n, std::vector<RetT>& res)
-{
-    MeanCalc<RetT,const T*> mean;
-    colApply(a,m,n,mean,res);
-}
-
-template <typename RetT, typename T>
-std::vector<RetT>
-Util::rowStdDevs(const T* a, const int m, const int n)
-{
-    StdDevCalc<RetT,const T*> stddev;
+    Util::rowApply(first,last,colSize,f,res);
     
-    return rowApply(a,m,n,stddev);
+    Util::transpose(const_cast<Tp*>(first),
+                    const_cast<Tp*>(last),rowSize);
 }
 
-template <typename RetT, typename T>
+template <typename T, typename ForwardIterator>
+std::vector<T>
+Util::rowMeans(ForwardIterator first,
+               ForwardIterator last,
+               const size_t rowSize)  
+{
+    MeanCalc<T,ForwardIterator> mean;
+    
+    return rowApply<T>(first,last,rowSize,mean);
+}
+
+template <typename T, typename ForwardIterator>
 void
-Util::rowStdDevs(const T* a, const int m, const int n, std::vector<RetT>& res)
+Util::rowMeans(ForwardIterator first,
+               ForwardIterator last,
+               const size_t rowSize,
+               std::vector<T>& res)  
 {
-    StdDevCalc<RetT,const T*> stddev;
-    rowApply(a,m,n,stddev,res);
+    MeanCalc<T,ForwardIterator> mean;
+    rowApply(first,last,rowSize,mean,res);
 }
 
-template <typename RetT, typename T>
-std::vector<RetT>
-Util::colStdDevs(const T* a, const int m, const int n)
+template <typename T, typename ForwardIterator>
+std::vector<T>
+Util::colMeans(ForwardIterator first,
+               ForwardIterator last,
+               const size_t colSize)
 {
-    StdDevCalc<RetT,const T*> stddev;
-
-    return colApply(a,m,n,stddev);
+    MeanCalc<T,ForwardIterator> mean;
+    
+    return colApply<T>(first,last,colSize,mean);
 }
 
-template <typename RetT, typename T>
+template <typename T, typename ForwardIterator>
 void
-Util::colStdDevs(const T* a, const int m, const int n, std::vector<RetT>& res)
+Util::colMeans(ForwardIterator first,
+               ForwardIterator last,
+               const size_t colSize,
+               std::vector<T>& res)
 {
-    StdDevCalc<RetT,const T*> stddev;
-    colApply(a,m,n,stddev,res);
+    MeanCalc<T,ForwardIterator> mean;
+    colApply(first,last,colSize,mean,res);
+}
+
+template <typename T, typename ForwardIterator, class F>
+std::vector<T>
+Util::rowStdDevs(ForwardIterator first,
+                 ForwardIterator last,
+                 const size_t rowSize)
+{
+    StdDevCalc<T,ForwardIterator> stddev;
+    
+    return rowApply(first,last,rowSize,stddev);
+}
+
+template <typename T, typename ForwardIterator>
+void
+Util::rowStdDevs(ForwardIterator first,
+                 ForwardIterator last,
+                 const size_t rowSize,
+                 std::vector<T>& res)
+{
+    StdDevCalc<T,ForwardIterator> stddev;
+    rowApply(first,last,rowSize,stddev,res);
+}
+
+template <typename T, typename ForwardIterator>
+std::vector<T>
+Util::colStdDevs(ForwardIterator first,
+                 ForwardIterator last,
+                 const size_t colSize)
+{
+    StdDevCalc<T,ForwardIterator> stddev;
+    
+    return colApply(first,last,colSize,stddev);
+}
+
+template <typename T, typename ForwardIterator>
+void
+Util::colStdDevs(ForwardIterator first,
+                 ForwardIterator last,
+                 const size_t colSize,
+                 std::vector<T>& res)
+{
+    StdDevCalc<T,ForwardIterator> stddev;
+    colApply(first,last,colSize,stddev,res);
 }
 
 template <class InputIterator, class OutputIterator>
 OutputIterator
-Util::standardize(InputIterator first, InputIterator last, OutputIterator result,
+Util::standardize(InputIterator first,
+                  InputIterator last,
+                  OutputIterator result,
                   bool center=true, bool scale=true)
 {
     typedef typename std::iterator_traits<OutputIterator>::value_type T;
@@ -389,8 +426,10 @@ Util::standardize(InputIterator first, InputIterator last, OutputIterator result
 
 template <class InputIterator, class OutputIterator, typename T>
 OutputIterator
-Util::standardize(InputIterator first, InputIterator last, OutputIterator result,
-                  T center, T scale)
+Util::standardize(InputIterator first,
+                  InputIterator last,
+                  OutputIterator result,
+                  const T center, T scale)
 {
     typedef typename std::iterator_traits<OutputIterator>::value_type Tp;
     Detail::assert<Detail::valid_numeric_type<Tp>::value> invalid_type;
@@ -402,80 +441,76 @@ Util::standardize(InputIterator first, InputIterator last, OutputIterator result
     return std::transform(first,last,result,op);
 }
 
-template <typename T>
+template <class InputIterator>
 void
-Util::standardizeRows(T* a, const int m, const int n,
+Util::standardizeRows(InputIterator first,
+                      InputIterator last,
+                      const size_t rowSize,
                       bool center=true, bool scale=true)
 {
+    typedef typename std::iterator_traits<InputIterator>::value_type T;
     Detail::assert<Detail::valid_numeric_type<T>::value> invalid_type;
     UNUSED(invalid_type);
     
-    for (int i = 0; i < m; i++) {
-        standardize(a + i*n,
-                    a + (i+1)*n,
-                    a + i*n,
-                    center, scale);
-    }
-}
-
-template <typename T>
-void
-Util::standardizeCols(T* a, const int m, const int n,
-                      bool center=true, bool scale=true)
-{
-    Detail::assert<Detail::valid_numeric_type<T>::value> invalid_type;
-    UNUSED(invalid_type);
-
-    T b[m*n];
-    transpose(a,m,n,b);
+    const size_t colSize = (last - first) / rowSize;
     
-    for (int i = 0; i < n; i++) {
-        standardize(b + i*m,
-                    b + (i+1)*m,
-                    b + i*m,
+    for (int i = 0; i < rowSize; i++) {
+        standardize(first + i*colSize,
+                    first + (i+1)*colSize,
+                    first + i*colSize,
                     center,scale);
     }
-    
-    transpose(b,n,m,a);
 }
 
-template <typename T, typename RetT>
+template <class InputIterator>
 void
-Util::standardizeRows(T* a, const int m, const int n,
-                      const std::vector<RetT>& means,
-                      const std::vector<RetT>& stddevs)
+Util::standardizeCols(InputIterator first,
+                      InputIterator last,
+                      const size_t colSize,
+                      bool center=true, bool scale=true)
 {
-    Detail::assert<Detail::valid_numeric_type<RetT>::value> invalid_type;
-    UNUSED(invalid_type);
+    const size_t rowSize = (last - first) / colSize;
+    
+    Util::transpose(first,last,colSize);
+    Util::standardizeRows(first,last,colSize,center,scale);
+    Util::transpose(first,last,rowSize);
+}
 
-    for (int i = 0; i < m; i++) {
-        standardize(a + i*n,
-                    a + (i+1)*n,
-                    a + i*n,
+template <class InputIterator, typename T>
+void
+Util::standardizeRows(InputIterator first,
+                      InputIterator last,
+                      const size_t rowSize,
+                      const std::vector<T>& means,
+                      const std::vector<T>& stddevs)
+{
+    typedef typename std::iterator_traits<InputIterator>::value_type Tp;
+    Detail::assert<Detail::valid_numeric_type<Tp>::value> invalid_type;
+    UNUSED(invalid_type);
+    
+    const size_t colSize = (last - first) / rowSize;
+    
+    for (int i = 0; i < rowSize; i++) {
+        standardize(first + i*colSize,
+                    first + (i+1)*colSize,
+                    first + i*colSize,
                     means[i],stddevs[i]);
     }
 }
 
-template <typename T, typename RetT>
+template <class InputIterator, typename T>
 void
-Util::standardizeCols(T* a, const int m, const int n,
-                      const std::vector<RetT>& means,
-                      const std::vector<RetT>& stddevs)
+Util::standardizeCols(InputIterator first,
+                      InputIterator last,
+                      const size_t colSize,
+                      const std::vector<T>& means,
+                      const std::vector<T>& stddevs)
 {
-    Detail::assert<Detail::valid_numeric_type<RetT>::value> invalid_type;
-    UNUSED(invalid_type);
-
-    T b[m*n];
-    transpose(a,m,n,b);
+    const size_t rowSize = (last - first) / colSize;
     
-    for (int i = 0; i < n; i++) {
-        standardize(b + i*m,
-                    b + (i+1)*m,
-                    b + i*m,
-                    means[i],stddevs[i]);
-    }
-    
-    transpose(b,n,m,a);
+    Util::transpose(first,last,colSize);
+    Util::standardizeRows(first,last,colSize,means,stddevs);
+    Util::transpose(first,last,rowSize);
 }
 
 #endif // STAT_UTIL_CH included
