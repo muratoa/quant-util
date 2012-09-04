@@ -14,7 +14,8 @@ template <typename T>
 void transpose(const T* a, int m, int n, T* b, int nb=64);
 
 template <typename RandomAccessIterator>
-void transpose(RandomAccessIterator first, RandomAccessIterator last, int m);
+void transpose(RandomAccessIterator first, RandomAccessIterator last,
+               size_t colSize);
     
 /** Descriptive Fns ************************************************************/
 
@@ -28,77 +29,121 @@ template <typename T, typename ForwardIterator>
 T sumOfSquares(ForwardIterator first, ForwardIterator last);
 
 template <typename T, typename ForwardIterator>
-T meanAbsDiff(ForwardIterator first, ForwardIterator last);    
+T meanAbsDiff(ForwardIterator first, ForwardIterator last);
 
 /** Matrix Apply Fns ***********************************************************/
 
-template <typename RetT, typename T, class F>
-std::vector<RetT> rowApply(const T* a, int m, int n, F f);
+template <typename T, typename ForwardIterator, class F>
+std::vector<T> rowApply(ForwardIterator first,
+                        ForwardIterator last,
+                        size_t rowSize, F f);
 
-template <typename RetT, typename T, class F>
-std::vector<RetT> colApply(const T* a, int m, int n, F f);
+template <typename T, typename ForwardIterator, class F>
+std::vector<T> colApply(ForwardIterator first,
+                        ForwardIterator last,
+                        size_t colSize, F f);
 
-template <typename RetT, typename T>
-std::vector<RetT> rowMeans(const T* a, int m, int n);    
+template <typename T, typename ForwardIterator>
+std::vector<T> rowMeans(ForwardIterator first,
+                        ForwardIterator last,
+                        size_t rowSize);
 
-template <typename RetT, typename T>
-std::vector<RetT> colMeans(const T* a, int m, int n);
+template <typename T, typename ForwardIterator>
+std::vector<T> colMeans(ForwardIterator first,
+                        ForwardIterator last,
+                        size_t colSize);
 
-template <typename RetT, typename T>
-std::vector<RetT> rowStdDevs(const T* a, int m, int n);
+template <typename T, typename ForwardIterator>
+std::vector<T> rowStdDevs(ForwardIterator first,
+                          ForwardIterator last,
+                          size_t rowSize);
 
-template <typename RetT, typename T>
-std::vector<RetT> colStdDevs(const T* a, int m, int n);
+template <typename T, typename ForwardIterator>
+std::vector<T> colStdDevs(ForwardIterator first,
+                          ForwardIterator last,
+                          size_t colSize);
 
-template <typename RetT, typename T, class F>
-void rowApply(const T* a, int m, int n, F f, std::vector<RetT>& res);
+template <typename T, typename ForwardIterator, class F>
+void rowApply(ForwardIterator first,
+              ForwardIterator last,
+              size_t rowSize,
+              F f, std::vector<T>& res);
 
-template <typename RetT, typename T, class F>
-void colApply(const T* a, int m, int n, F f, std::vector<RetT>& res);    
+template <typename T, typename ForwardIterator, class F>
+void colApply(ForwardIterator first,
+              ForwardIterator last,
+              size_t colSize,
+              F f, std::vector<T>& res);
 
-template <typename RetT, typename T>
-void rowMeans(const T* a, int m, int n, std::vector<RetT>& res);    
+template <typename T, typename ForwardIterator>
+void rowMeans(ForwardIterator first,
+              ForwardIterator last,
+              size_t rowSize,
+              std::vector<T>& res);
 
-template <typename RetT, typename T>
-void colMeans(const T* a, int m, int n, std::vector<RetT>& res);
+template <typename T, typename ForwardIterator>
+void colMeans(ForwardIterator first,
+              ForwardIterator last,
+              size_t colSize,
+              std::vector<T>& res);
 
-template <typename RetT, typename T>
-void rowStdDevs(const T* a, int m, int n, std::vector<RetT>& res);
-
-template <typename RetT, typename T>
-void colStdDevs(const T* a, int m, int n, std::vector<RetT>& res);    
+template <typename T, typename ForwardIterator>
+void rowStdDevs(ForwardIterator first,
+                ForwardIterator last,
+                size_t rowSize,
+                std::vector<T>& res);
+    
+template <typename T, typename ForwardIterator>
+void colStdDevs(ForwardIterator first,
+                ForwardIterator last,
+                size_t colSize,
+                std::vector<T>& res);
 
 /** Scale Fns ******************************************************************/
 
 template <class InputIterator, class OutputIterator>
 OutputIterator
-standardize(InputIterator first, InputIterator last, OutputIterator result,
+standardize(InputIterator first,
+            InputIterator last,
+            OutputIterator result,
             bool center=true, bool scale=true);
 
 template <class InputIterator, class OutputIterator, typename T>
 OutputIterator
-standardize(InputIterator first, InputIterator last, OutputIterator result,
+standardize(InputIterator first,
+            InputIterator last,
+            OutputIterator result,
             T center, T scale);
 
-template <typename T>
+template <class InputIterator>
 void
-standardizeRows(T* a, int m, int n, bool center=true, bool scale=true);
+standardizeRows(InputIterator first,
+                InputIterator last,
+                size_t rowSize,
+                bool center=true, bool scale=true);
 
-template <typename T>
+template <class InputIterator>
 void
-standardizeCols(T* a, int m, int n, bool center=true, bool scale=true);
+standardizeCols(InputIterator first,
+                InputIterator last,
+                size_t colSize,
+                bool center=true, bool scale=true);
     
-template <typename T, typename T2>
+template <class InputIterator, typename T>
 void
-standardizeRows(T* a, int m, int n,
-                const std::vector<T2>& means,
-                const std::vector<T2>& stddevs);    
+standardizeRows(InputIterator first,
+                InputIterator last,
+                size_t rowSize,
+                const std::vector<T>& means,
+                const std::vector<T>& stddevs);
     
-template <typename T, typename T2>
+template <class InputIterator, typename T>
 void
-standardizeCols(T* a, int m, int n,
-                const std::vector<T2>& means,
-                const std::vector<T2>& stddevs);
+standardizeCols(InputIterator first,
+                InputIterator last,
+                size_t rowSize,
+                const std::vector<T>& means,
+                const std::vector<T>& stddevs);
     
 } // namespace
 
