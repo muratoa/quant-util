@@ -3,11 +3,12 @@
 
 /** CPP INCLUDES ***************************************************************/
 #include <algorithm>
+#include <iterator>
 
 template <typename T>
 Util::TwoDVector<T>::TwoDVector(const size_t D1, const size_t D2)
-    : nrow_(0)
-    , ncol_(0)
+    : rowSize_(0)
+    , colSize_(0)
     , pData_(NULL)
 {
     resize(D1,D2);
@@ -16,8 +17,8 @@ Util::TwoDVector<T>::TwoDVector(const size_t D1, const size_t D2)
 template <typename T>
 Util::TwoDVector<T>::TwoDVector(const_iterator first,
                                 const size_t D1, const size_t D2)
-    : nrow_(0)
-    , ncol_(0)
+    : rowSize_(0)
+    , colSize_(0)
     , pData_(NULL)
 {
     resize(first,D1,D2);
@@ -25,8 +26,8 @@ Util::TwoDVector<T>::TwoDVector(const_iterator first,
 
 template <typename T>
 Util::TwoDVector<T>::TwoDVector()
-    : nrow_(0)
-    , ncol_(0)
+    : rowSize_(0)
+    , colSize_(0)
     , pData_(NULL)
 {
     resize(1,1);
@@ -73,8 +74,8 @@ Util::TwoDVector<T>::resizeImpl(const size_t D1, const size_t D2,
     }
     
     pData_ = tmp;
-    nrow_ = D1;
-    ncol_ = D2;
+    rowSize_ = D1;
+    colSize_ = D2;
 }
 
 template <typename T>
@@ -93,15 +94,15 @@ Util::TwoDVector<T>::resizeImpl(const size_t D1, const size_t D2,
     }
     
     pData_ = tmp;
-    nrow_ = D1;
-    ncol_ = D2;
+    rowSize_ = D1;
+    colSize_ = D2;
 }
 
 template <typename T>
 void
 Util::TwoDVector<T>::copyFrom(const Util::TwoDVector<T>& x)
 {
-    resizeImpl(x.nrow(),x.ncol(),x);
+    resizeImpl(x.rowSize(),x.colSize(),x);
 }
 
 template <typename T>
@@ -182,16 +183,16 @@ template <typename T>
 size_t
 Util::TwoDVector<T>::getIndex(const size_t i, const size_t j) const
 {
-    return ncol()*i + j;
+    return colSize()*i + j;
 }
 
 template <typename T>
 void
 Util::TwoDVector<T>::dimSwap()
 {
-    const size_t tmp = nrow();
-    nrow_ = ncol();
-    ncol_ = tmp;
+    const size_t tmp = rowSize();
+    rowSize_ = colSize();
+    colSize_ = tmp;
 }
 
 template <typename T>
@@ -199,11 +200,12 @@ void
 Util::TwoDVector<T>::print(std::ostream& os) const
 {
     const TwoDVector<T>& x = *this;
+    std::ostream_iterator<T> oit(os," ");
     
-    for (size_t i = 0;  i < nrow(); ++i) {
-        for (size_t j = 0; j < ncol(); ++j) {
-            os << x(i,j) << ' ';
-        }
+    for (size_t i = 0; i < x.rowSize(); ++i) {
+        
+        std::copy(x.begin() + i*x.colSize(),
+                  x.begin() + (i+1)*x.colSize(), oit);
         os << std::endl;
     }
 }
